@@ -40,7 +40,7 @@
   .cv-head{
     display:grid;
     grid-template-columns: 140px 1fr; /* Platz für größeres Bild */
-    gap:32px; /* mehr Abstand zum Textblock */
+    gap:32px; /* Abstand zum Textblock */
     align-items:center;
     margin-bottom:18px;
   }
@@ -241,47 +241,64 @@
     ],
   };
 
-  const $ = s=>document.querySelector(s);
-  const $$ = s=>Array.from(document.querySelectorAll(s));
-  function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+  const $ = function(s){ return document.querySelector(s); };
+  const $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t;} return a; }
 
-  const cardsEl   = $("#cards");
-  const resultEl  = $("#result");
-  const simpleCb  = $("#simpleText");
+  var cardsEl   = null;
+  var resultEl  = null;
+  var simpleCb  = null;
 
   function zoneAccepts(zone, key){
-    return (zone.dataset.accept||"").split(",").map(s=>s.trim()).includes(key);
+    return (zone.getAttribute("data-accept") || "").split(",").map(function(s){return s.trim();}).indexOf(key) !== -1;
   }
 
   function buildCards(){
     cardsEl.innerHTML = "";
-    const items = simpleCb?.checked ? CONFIG.items_short : CONFIG.items_full;
-    for(const item of shuffle(items)){
-      const card = document.createElement("div");
-      card.className = "card";
-      if(simpleCb?.checked) card.classList.add("small");
+    var useShort = (simpleCb && simpleCb.checked);
+    var items = useShort ? CONFIG.items_short : CONFIG.items_full;
+    shuffle(items).forEach(function(item){
+      var card = document.createElement("div");
+      card.className = "card" + (useShort ? " small" : "");
       card.textContent = item.text;
       card.setAttribute("data-key", item.key);
       card.setAttribute("role","button");
       card.setAttribute("tabindex","0");
       cardsEl.appendChild(card);
-    }
+    });
     attachDnd();
     resultEl.textContent = "";
     resultEl.className = "result";
   }
-  simpleCb?.addEventListener("change", buildCards);
 
-  let drag = null;
+  // nach DOM-Load: Referenzen holen & Events setzen
+  function init(){
+    cardsEl  = $("#cards");
+    resultEl = $("#result");
+    simpleCb = $("#simpleText");
+    if (simpleCb) { simpleCb.addEventListener("change", buildCards); }
+
+    // Buttons
+    $("#check").addEventListener("click", onCheck);
+    $("#show").addEventListener("click", onShow);
+    $("#reset").addEventListener("click", onReset);
+    $("#mix").addEventListener("click", onMix);
+
+    // Karten erzeugen
+    buildCards();
+  }
+
+  // Drag & Drop
+  var drag = null; // {card, ghost, dx, dy}
 
   function attachDnd(){
-    $$(".card").forEach(card=>{
+    $$(".card").forEach(function(card){
       card.addEventListener("pointerdown", onDown);
-      card.addEventListener("keydown", e=>{
+      card.addEventListener("keydown", function(e){
         if(e.key==="Enter"||e.key===" "){
           e.preventDefault();
-          const key = card.dataset.key;
-          const target = $$(".drop-zone").find(z=>zoneAccepts(z,key));
+          var key = card.getAttribute("data-key");
+          var target = $$(".drop-zone").find(function(z){ return zoneAccepts(z,key); });
           if(target){ target.appendChild(card); flash(target); }
         }
       });
@@ -289,20 +306,20 @@
   }
 
   function onDown(e){
-    const card = e.currentTarget;
+    var card = e.currentTarget;
     e.preventDefault();
     card.setPointerCapture(e.pointerId);
 
-    const r = card.getBoundingClientRect();
-    const ghost = card.cloneNode(true);
+    var r = card.getBoundingClientRect();
+    var ghost = card.cloneNode(true);
     ghost.classList.add("floating");
     ghost.style.width = r.width+"px";
     ghost.style.height = r.height+"px";
     document.body.appendChild(ghost);
 
-    drag = {card, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top};
+    drag = {card:card, ghost:ghost, dx: e.clientX - r.left, dy: e.clientY - r.top};
     card.style.opacity = ".35";
-    highlight(card.dataset.key,true);
+    highlight(card.getAttribute("data-key"), true);
 
     card.addEventListener("pointermove", onMove);
     card.addEventListener("pointerup", onUp);
@@ -318,30 +335,31 @@
   }
 
   function moveGhost(e){
-    const {ghost,dx,dy} = drag;
-    const x = e.clientX - dx;
-    const y = e.clientY - dy;
+    var ghost = drag.ghost, dx = drag.dx, dy = drag.dy;
+    var x = e.clientX - dx;
+    var y = e.clientY - dy;
     ghost.style.left = x + "px";
     ghost.style.top  = y + "px";
 
-    const target = bestZone(e.clientX, e.clientY, drag.card.dataset.key);
-    $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
+    var target = bestZone(e.clientX, e.clientY, drag.card.getAttribute("data-key"));
+    $$(".drop-zone").forEach(function(z){ z.classList.remove("slot-highlight"); });
     if(target) target.classList.add("slot-highlight");
   }
 
   function onUp(e){
-    const {card, ghost} = drag || {};
+    var card = drag && drag.card;
+    var ghost = drag && drag.ghost;
     if(!card) return;
-    const key = card.dataset.key;
-    const target = bestZone(e.clientX, e.clientY, key);
-    $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
+    var key = card.getAttribute("data-key");
+    var target = bestZone(e.clientX, e.clientY, key);
+    $$(".drop-zone").forEach(function(z){ z.classList.remove("slot-highlight"); });
     highlight(key,false);
 
     if(target){ target.appendChild(card); flash(target); }
     else { cardsEl.appendChild(card); }
 
     card.style.opacity="1";
-    ghost.remove();
+    ghost.parentNode.removeChild(ghost);
     drag=null;
 
     card.removeEventListener("pointermove", onMove);
@@ -352,34 +370,34 @@
   }
 
   function bestZone(x,y,key){
-    const el = document.elementFromPoint(x,y);
-    const zones = new Set();
-    let n = el;
+    var el = document.elementFromPoint(x,y);
+    var zones = new Set();
+    var n = el;
     while(n){
-      if(n.classList?.contains("drop-zone")) zones.add(n);
+      if(n.classList && n.classList.contains("drop-zone")) zones.add(n);
       n = n.parentElement;
     }
-    const valid = [...zones].filter(z=>zoneAccepts(z,key));
+    var valid = Array.from(zones).filter(function(z){ return zoneAccepts(z,key); });
     if(valid.length) return valid[0];
 
-    const all = $$(".drop-zone").filter(z=>zoneAccepts(z,key));
-    let best=null,bestD=Infinity;
-    for(const z of all){
-      const r = z.getBoundingClientRect();
-      const cx = Math.max(r.left, Math.min(x, r.right));
-      const cy = Math.max(r.top,  Math.min(y, r.bottom));
-      const d = (x-cx)**2 + (y-cy)**2;
+    var all = $$(".drop-zone").filter(function(z){ return zoneAccepts(z,key); });
+    var best=null,bestD=Infinity;
+    all.forEach(function(z){
+      var r = z.getBoundingClientRect();
+      var cx = Math.max(r.left, Math.min(x, r.right));
+      var cy = Math.max(r.top,  Math.min(y, r.bottom));
+      var d = (x-cx)*(x-cx) + (y-cy)*(y-cy);
       if(d<bestD){ bestD=d; best=z; }
-    }
+    });
     if(!best) return null;
-    const R = best.getBoundingClientRect();
-    const inside = x>=R.left && x<=R.right && y>=R.top && y<=R.bottom;
-    const near = bestD < 2600;
+    var R = best.getBoundingClientRect();
+    var inside = x>=R.left && x<=R.right && y>=R.top && y<=R.bottom;
+    var near = bestD < 2600; // ~51px Radius
     return (inside||near) ? best : null;
   }
 
   function highlight(key,on){
-    $$(".drop-zone").forEach(z=>{
+    $$(".drop-zone").forEach(function(z){
       z.style.outline = (on && zoneAccepts(z,key)) ? "2px solid rgba(37,99,235,.35)" : "none";
     });
   }
@@ -388,53 +406,57 @@
     el.animate([{background:"#e7f0ff"},{background:"#fafafa"}],{duration:450});
   }
 
-  // Buttons: Prüfen / Lösung / Zurücksetzen / Mischen
-  document.getElementById("check").addEventListener("click", ()=>{
-    let total=0, ok=0, wrong=0;
-    $$(".drop-zone").forEach(z=>{
-      const accepts = (z.dataset.accept||"").split(",").map(s=>s.trim());
-      z.querySelectorAll(".card").forEach(card=>{
+  // Buttons
+  function onCheck(){
+    var total=0, ok=0, wrong=0;
+    $$(".drop-zone").forEach(function(z){
+      var accepts = (z.getAttribute("data-accept")||"").split(",").map(function(s){return s.trim();});
+      z.querySelectorAll(".card").forEach(function(card){
         total++;
-        const good = accepts.includes(card.dataset.key);
+        var good = accepts.indexOf(card.getAttribute("data-key")) !== -1;
         card.style.borderColor = good ? "#86efac" : "#fca5a5";
         if(good) ok++; else wrong++;
       });
     });
     resultEl.className = "result " + (wrong===0 ? "ok" : "bad");
-    resultEl.textContent = wrong===0
-      ? `Super! Alle ${ok}/${total} Karten liegen richtig.`
-      : `Richtig: ${ok}/${total}. Prüfe die rot markierten Karten.`;
-  });
+    resultEl.textContent = (wrong===0)
+      ? ("Super! Alle " + ok + "/" + total + " Karten liegen richtig.")
+      : ("Richtig: " + ok + "/" + total + ". Prüfe die rot markierten Karten.");
+  }
 
-  document.getElementById("show").addEventListener("click", ()=>{
-    $$(".card").forEach(card=>{
-      const key = card.dataset.key;
-      const target = $$(".drop-zone").find(z=>zoneAccepts(z,key));
+  function onShow(){
+    $$(".card").forEach(function(card){
+      var key = card.getAttribute("data-key");
+      var target = $$(".drop-zone").find(function(z){ return zoneAccepts(z,key); });
       (target || cardsEl).appendChild(card);
       card.style.borderColor = "#86efac";
     });
     resultEl.className = "result ok";
     resultEl.textContent = "Lösung angezeigt.";
-  });
+  }
 
-  document.getElementById("reset").addEventListener("click", ()=>{
-    $$(".card").forEach(c=>{
+  function onReset(){
+    $$(".card").forEach(function(c){
       c.style.borderColor = "#e5e7eb";
       cardsEl.appendChild(c);
     });
     resultEl.textContent = "";
     resultEl.className = "result";
-  });
+  }
 
-  document.getElementById("mix").addEventListener("click", ()=>{
-    const arr = [...$$(".card")];
-    for(const c of shuffle(arr)) cardsEl.appendChild(c);
+  function onMix(){
+    var arr = $$(".card");
+    shuffle(arr).forEach(function(c){ cardsEl.appendChild(c); });
     resultEl.textContent = "";
     resultEl.className = "result";
-  });
+  }
 
-  // Karten initial erzeugen
-  buildCards();
+  // DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 </script>
 </body>
 </html>
