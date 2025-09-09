@@ -39,8 +39,8 @@
   }
   .cv-head{
     display:grid;
-    grid-template-columns: 140px 1fr; /* Spalte für das größere Bild */
-    gap:32px; /* mehr Abstand */
+    grid-template-columns: 140px 1fr; /* Platz für größeres Bild */
+    gap:32px; /* mehr Abstand zum Textblock */
     align-items:center;
     margin-bottom:18px;
   }
@@ -62,7 +62,7 @@
   }
   .name-block{display:flex;flex-direction:column;gap:4px}
   .cv-name{font-size:28px; font-weight:800; letter-spacing:.2px}
-  .cv-sub{color:var(--muted);font-size:14px}
+  .cv-sub{color:#64748b;font-size:14px}
 
   .cv-grid{display:grid; grid-template-columns: 260px 1fr; gap:28px;}
   @media (max-width:800px){ .cv-grid{grid-template-columns:1fr} }
@@ -188,7 +188,6 @@
   </div>
 
 <script>
-  /* ---- Drag&Drop-Logik und Karten wie vorher ---- */
   const CONFIG = {
     items_full: [
       { key:"name",       text:"Name: (Vor- und Nachname)" },
@@ -382,3 +381,60 @@
   function highlight(key,on){
     $$(".drop-zone").forEach(z=>{
       z.style.outline = (on && zoneAccepts(z,key)) ? "2px solid rgba(37,99,235,.35)" : "none";
+    });
+  }
+
+  function flash(el){
+    el.animate([{background:"#e7f0ff"},{background:"#fafafa"}],{duration:450});
+  }
+
+  // Buttons: Prüfen / Lösung / Zurücksetzen / Mischen
+  document.getElementById("check").addEventListener("click", ()=>{
+    let total=0, ok=0, wrong=0;
+    $$(".drop-zone").forEach(z=>{
+      const accepts = (z.dataset.accept||"").split(",").map(s=>s.trim());
+      z.querySelectorAll(".card").forEach(card=>{
+        total++;
+        const good = accepts.includes(card.dataset.key);
+        card.style.borderColor = good ? "#86efac" : "#fca5a5";
+        if(good) ok++; else wrong++;
+      });
+    });
+    resultEl.className = "result " + (wrong===0 ? "ok" : "bad");
+    resultEl.textContent = wrong===0
+      ? `Super! Alle ${ok}/${total} Karten liegen richtig.`
+      : `Richtig: ${ok}/${total}. Prüfe die rot markierten Karten.`;
+  });
+
+  document.getElementById("show").addEventListener("click", ()=>{
+    $$(".card").forEach(card=>{
+      const key = card.dataset.key;
+      const target = $$(".drop-zone").find(z=>zoneAccepts(z,key));
+      (target || cardsEl).appendChild(card);
+      card.style.borderColor = "#86efac";
+    });
+    resultEl.className = "result ok";
+    resultEl.textContent = "Lösung angezeigt.";
+  });
+
+  document.getElementById("reset").addEventListener("click", ()=>{
+    $$(".card").forEach(c=>{
+      c.style.borderColor = "#e5e7eb";
+      cardsEl.appendChild(c);
+    });
+    resultEl.textContent = "";
+    resultEl.className = "result";
+  });
+
+  document.getElementById("mix").addEventListener("click", ()=>{
+    const arr = [...$$(".card")];
+    for(const c of shuffle(arr)) cardsEl.appendChild(c);
+    resultEl.textContent = "";
+    resultEl.className = "result";
+  });
+
+  // Karten initial erzeugen
+  buildCards();
+</script>
+</body>
+</html>
