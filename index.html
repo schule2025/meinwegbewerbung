@@ -6,7 +6,7 @@
 <title>Lebenslauf – Drag-&-Drop (A1) – Wolf im Anzug</title>
 <style>
   :root{
-    --paper:#ffffff; --bg:#f3f4f6; --ink:#0f172a; --muted:#6b7280;f
+    --paper:#ffffff; --bg:#f3f4f6; --ink:#0f172a; --muted:#6b7280;
     --line:#e5e7eb; --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
   }
   *{box-sizing:border-box}
@@ -84,6 +84,20 @@
   }
   .drop-zone.tight{min-height:38px;padding:8px;border-radius:10px}
   .slot-highlight{outline:3px solid rgba(37,99,235,.35);outline-offset:2px}
+
+  /* Footer: Ort / Datum / Unterschrift */
+  .cv-footer{
+    margin-top:40px;
+    display:flex;
+    justify-content:flex-end;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+  }
+  .cv-footer .drop-zone{
+    min-height:32px;
+    width:220px;
+  }
 
   .tray{
     background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;
@@ -176,6 +190,13 @@
             </div>
           </div>
         </div>
+
+        <!-- Footer: Ort / Datum / Unterschrift -->
+        <div class="cv-footer">
+          <div class="drop-zone tight" data-accept="ort"></div>
+          <div class="drop-zone tight" data-accept="datum"></div>
+          <div class="drop-zone tight" data-accept="unterschrift"></div>
+        </div>
       </article>
 
       <!-- Rechte Seite: Karten -->
@@ -213,6 +234,11 @@
       { key:"kenntnisse", text:"Fähigkeiten: pünktlich, teamfähig" },
       { key:"hobbys",     text:"Hobbys: Fußball, Zeichnen, Musik" },
       { key:"interessen", text:"Interessen: Technik, Soziales" },
+
+      /* Footer-Karten (Beispiel-Daten) */
+      { key:"ort",        text:"Ort: Berlin" },
+      { key:"datum",      text:"Datum: 09.09.2025" },
+      { key:"unterschrift", text:"Unterschrift: __________________" },
     ],
     items_short: [
       { key:"name",       text:"Name" },
@@ -238,6 +264,10 @@
       { key:"kenntnisse", text:"Fähigkeiten" },
       { key:"hobbys",     text:"Hobbys" },
       { key:"interessen", text:"Interessen" },
+
+      { key:"ort",        text:"Ort" },
+      { key:"datum",      text:"Datum" },
+      { key:"unterschrift", text:"Unterschrift" },
     ],
   };
 
@@ -271,20 +301,17 @@
     resultEl.className = "result";
   }
 
-  // nach DOM-Load: Referenzen holen & Events setzen
   function init(){
     cardsEl  = $("#cards");
     resultEl = $("#result");
     simpleCb = $("#simpleText");
     if (simpleCb) { simpleCb.addEventListener("change", buildCards); }
 
-    // Buttons
     $("#check").addEventListener("click", onCheck);
     $("#show").addEventListener("click", onShow);
     $("#reset").addEventListener("click", onReset);
     $("#mix").addEventListener("click", onMix);
 
-    // Karten erzeugen
     buildCards();
   }
 
