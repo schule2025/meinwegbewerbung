@@ -10,10 +10,13 @@
     --line:#e5e7eb; --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0;background:var(--bg);color:var(--ink);
     font:16px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    padding:20px;display:flex;justify-content:center;align-items:flex-start;min-height:100vh
+    padding:20px;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;
+    /* wichtig für ruhiges Touch-Dragging */
+    touch-action: none;
   }
   .wrap{width:min(1200px,100%);display:grid;gap:16px}
   header.top{
@@ -30,16 +33,13 @@
   .kiosk{display:flex;gap:10px;align-items:center;color:var(--muted)}
   .kiosk input{width:18px;height:18px}
 
-  /* Arbeitsfläche: links CV (wie echtes Dokument), rechts Karten */
   .board{display:grid;grid-template-columns: 2fr 1fr; gap:16px}
   @media (max-width:1000px){ .board{grid-template-columns:1fr} }
 
-  /* CV Papier */
   .cv-sheet{
     background:var(--paper); border:1px solid var(--line); border-radius:16px;
     padding:28px; box-shadow:0 10px 30px rgba(0,0,0,.06);
   }
-  /* Kopf mit großem Namen */
   .cv-head{
     display:grid; grid-template-columns: 96px 1fr; gap:20px; align-items:center; margin-bottom:18px;
   }
@@ -52,10 +52,7 @@
   .cv-name{font-size:28px; font-weight:800; letter-spacing:.2px}
   .cv-sub{color:var(--muted);font-size:14px}
 
-  /* Layout 2 Spalten wie bei echten Vorlagen */
-  .cv-grid{
-    display:grid; grid-template-columns: 260px 1fr; gap:28px;
-  }
+  .cv-grid{display:grid; grid-template-columns: 260px 1fr; gap:28px;}
   @media (max-width:800px){ .cv-grid{grid-template-columns:1fr} }
 
   .col-left{padding-right:8px;border-right:1px solid var(--line)}
@@ -68,7 +65,6 @@
   }
   .cv-line{height:1px;background:var(--line);margin:8px 0 10px}
 
-  /* Drop-Zonen stilecht in den jeweiligen Bereichen */
   .drop-zone{
     min-height:48px; border:2px dashed #dfe3ea; border-radius:12px;
     padding:10px; background:#fafafa;
@@ -77,7 +73,6 @@
   .drop-zone.tight{min-height:38px;padding:8px;border-radius:10px}
   .slot-highlight{outline:3px solid rgba(37,99,235,.35);outline-offset:2px}
 
-  /* Kartenbereich rechts */
   .tray{
     background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;
     box-shadow:0 10px 30px rgba(0,0,0,.05); display:flex;flex-direction:column;gap:10px
@@ -91,7 +86,11 @@
   }
   .card.small{font-weight:500}
   .card:active{cursor:grabbing}
-  .floating{position:fixed;z-index:1000;pointer-events:none;transform:rotate(0.0001deg)}
+  /* Stabilerer Ghost: fixed + left/top */
+  .floating{
+    position:fixed; z-index:1000; pointer-events:none;
+    left:0; top:0; /* wir setzen left/top dynamisch */
+  }
 
   .result{font-weight:800;margin-top:4px}
   .ok{color:var(--good)} .bad{color:var(--bad)}
@@ -114,22 +113,16 @@
     </header>
 
     <section class="board">
-      <!-- Linke Seite: ECHTER CV-Aufbau -->
       <article class="cv-sheet" aria-label="Lebenslauf-Dokument">
-        <!-- Kopf -->
         <div class="cv-head">
           <div class="avatar">Foto</div>
           <div class="name-block">
             <div class="cv-name">Vorname Nachname</div>
             <div class="cv-sub">Lebenslauf</div>
-            <!-- Optional: kleine Drop-Zone für Kurzprofil -->
-            <!-- <div class="drop-zone tight" data-accept="profil"></div> -->
           </div>
         </div>
 
-        <!-- Zwei-Spalten-Layout -->
         <div class="cv-grid">
-          <!-- Linke Spalte: Persönliche Daten / Kontakt -->
           <div class="col-left">
             <div class="cv-sec">
               <div class="cv-title">Persönliche Daten</div>
@@ -152,7 +145,6 @@
             </div>
           </div>
 
-          <!-- Rechte Spalte: Erfahrung / Ausbildung / Skills -->
           <div class="col-right">
             <div class="cv-sec">
               <div class="cv-title">Berufserfahrung / Praktika</div>
@@ -173,7 +165,6 @@
         </div>
       </article>
 
-      <!-- Rechte Seite: Karten -->
       <aside class="tray" aria-label="Karten-Ablage">
         <div class="hint">Karten:</div>
         <div id="cards" class="cards"></div>
@@ -183,9 +174,6 @@
   </div>
 
 <script>
-  /***************
-   * Inhalt
-   ***************/
   const CONFIG = {
     items_full: [
       { key:"name",       text:"Name: (Vor- und Nachname)" },
@@ -253,11 +241,11 @@
 
   function buildCards(){
     cardsEl.innerHTML = "";
-    const items = simpleCb.checked ? CONFIG.items_short : CONFIG.items_full;
+    const items = simpleCb?.checked ? CONFIG.items_short : CONFIG.items_full;
     for(const item of shuffle(items)){
       const card = document.createElement("div");
       card.className = "card";
-      if(simpleCb.checked) card.classList.add("small");
+      if(simpleCb?.checked) card.classList.add("small");
       card.textContent = item.text;
       card.setAttribute("data-key", item.key);
       card.setAttribute("role","button");
@@ -268,10 +256,10 @@
     resultEl.textContent = "";
     resultEl.className = "result";
   }
-  simpleCb.addEventListener("change", buildCards);
+  simpleCb?.addEventListener("change", buildCards);
 
-  /* Drag & Drop via Pointer Events (touch+mouse) */
-  let drag = null;
+  /* --- Drag & Drop: stabiler Ghost mit left/top + preventDefault --- */
+  let drag = null; // {card, ghost, dx, dy}
 
   function attachDnd(){
     $$(".card").forEach(card=>{
@@ -296,9 +284,10 @@
     const ghost = card.cloneNode(true);
     ghost.classList.add("floating");
     ghost.style.width = r.width+"px";
+    ghost.style.height = r.height+"px";
     document.body.appendChild(ghost);
 
-    drag = {card, ghost, dx:e.clientX-r.left, dy:e.clientY-r.top};
+    drag = {card, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top};
     card.style.opacity = ".35";
     highlight(card.dataset.key,true);
 
@@ -308,15 +297,26 @@
 
     moveGhost(e);
   }
-  function onMove(e){ if(!drag) return; moveGhost(e); }
+
+  function onMove(e){
+    if(!drag) return;
+    // verhindert, dass Touch/Mouse Scrolling o.ä. reinfunkt
+    e.preventDefault();
+    moveGhost(e);
+  }
+
   function moveGhost(e){
-    const {ghost,dx,dy,card} = drag;
-    const x = e.clientX - dx, y = e.clientY - dy;
-    ghost.style.transform = `translate(${x}px,${y}px)`;
-    const target = bestZone(e.clientX, e.clientY, card.dataset.key);
+    const {ghost,dx,dy} = drag;
+    const x = e.clientX - dx;
+    const y = e.clientY - dy;
+    ghost.style.left = x + "px";
+    ghost.style.top  = y + "px";
+
+    const target = bestZone(e.clientX, e.clientY, drag.card.dataset.key);
     $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
     if(target) target.classList.add("slot-highlight");
   }
+
   function onUp(e){
     const {card, ghost} = drag || {};
     if(!card) return;
@@ -338,10 +338,24 @@
     resultEl.textContent="";
     resultEl.className="result";
   }
+
   function bestZone(x,y,key){
-    const zones = $$(".drop-zone").filter(z=>zoneAccepts(z,key));
+    // Nimm die Zone unter dem Cursor, wenn gültig – das wirkt natürlicher
+    const el = document.elementFromPoint(x,y);
+    const zones = new Set();
+    let n = el;
+    while(n){
+      if(n.classList?.contains("drop-zone")) zones.add(n);
+      n = n.parentElement;
+    }
+    // Favorisiere die nächste gültige Zone
+    const valid = [...zones].filter(z=>zoneAccepts(z,key));
+    if(valid.length) return valid[0];
+
+    // Fallback: Abstand zur nächsten passenden Zone
+    const all = $$(".drop-zone").filter(z=>zoneAccepts(z,key));
     let best=null,bestD=Infinity;
-    for(const z of zones){
+    for(const z of all){
       const r = z.getBoundingClientRect();
       const cx = Math.max(r.left, Math.min(x, r.right));
       const cy = Math.max(r.top,  Math.min(y, r.bottom));
@@ -351,17 +365,16 @@
     if(!best) return null;
     const R = best.getBoundingClientRect();
     const inside = x>=R.left && x<=R.right && y>=R.top && y<=R.bottom;
-    const near = bestD < 2600;
+    const near = bestD < 2600; // ~51px Radius
     return (inside||near) ? best : null;
   }
+
   function highlight(key,on){
     $$(".drop-zone").forEach(z=>{
       z.style.outline = (on && zoneAccepts(z,key)) ? "2px solid rgba(37,99,235,.35)" : "none";
     });
   }
-  function flash(el){
-    el.animate([{background:"#e7f0ff"},{background:"#fafafa"}],{duration:450});
-  }
+  function flash(el){ el.animate([{background:"#e7f0ff"},{background:"#fafafa"}],{duration:450}); }
 
   /* Prüfen, Lösung, Reset, Mischen */
   $("#check").addEventListener("click", ()=>{
