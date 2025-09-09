@@ -1,423 +1,410 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lebenslauf – Drag & Drop (A1)</title>
-  <style>
-    :root{
-      --bg:#f6f7fb;--card:#ffffff;--ink:#1f2937;--muted:#6b7280;--accent:#2563eb;
-      --good:#16a34a;--bad:#dc2626;--zone:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial;
-      display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px;
-    }
-    .app{
-      width:min(1100px,100%);background:var(--card);border-radius:16px;
-      box-shadow:0 10px 30px rgba(0,0,0,.08);padding:18px 18px 22px;
-    }
-    header{
-      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px
-    }
-    h1{font-size:20px;margin:0}
-    .subtitle{color:var(--muted);font-size:14px}
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    button{
-      appearance:none;border:1px solid #d1d5db;background:#fff;color:var(--ink);
-      padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;
-      transition:.15s transform, .15s background;
-    }
-    button:hover{background:#f3f4f6}
-    button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-    button.ghost{background:transparent}
-    .board{
-      display:grid;grid-template-columns: 1.15fr .85fr; gap:16px; margin-top:8px;
-    }
-    /* Lebenslauf-Layout (links) */
-    .cv{
-      border:2px solid #e5e7eb;border-radius:14px;padding:14px;background:#fff;
-      display:grid;grid-template-rows:auto auto auto auto;gap:12px;
-    }
-    .cv .title{font-weight:800;font-size:18px}
-    .section{
-      border:2px dashed var(--zone);border-radius:12px;padding:10px;min-height:92px;
-      position:relative;background:#fafafa;
-    }
-    .label{
-      position:absolute;top:-11px;left:10px;background:#fff;padding:0 8px;font-size:13px;color:var(--muted)
-    }
-    .drop-zone{
-      display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;min-height:68px;
-      padding-top:6px;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lebenslauf – Realistische Drag-&-Drop-Übung (A1)</title>
+<style>
+  :root{
+    --paper:#ffffff; --bg:#f3f4f6; --ink:#0f172a; --muted:#6b7280;
+    --line:#e5e7eb; --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    padding:20px;display:flex;justify-content:center;align-items:flex-start;min-height:100vh
+  }
+  .wrap{width:min(1200px,100%);display:grid;gap:16px}
+  header.top{
+    display:flex;justify-content:space-between;align-items:center;gap:12px
+  }
+  h1{margin:0;font-size:20px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  button{
+    border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;
+    font-weight:600;cursor:pointer
+  }
+  button:hover{background:#f8fafc}
+  .primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .kiosk{display:flex;gap:10px;align-items:center;color:var(--muted)}
+  .kiosk input{width:18px;height:18px}
 
-    /* Karten (rechts) */
-    .tray{
-      border:2px solid #e5e7eb;border-radius:14px;padding:12px;background:#fff;
-      min-height:380px;display:flex;flex-direction:column;gap:10px;
-    }
-    .tray .hint{font-size:14px;color:var(--muted);margin-bottom:8px}
-    .cards{
-      display:grid;grid-template-columns: repeat(auto-fill, minmax(180px,1fr));gap:10px;
-    }
-    .card{
-      user-select:none; touch-action:none;
-      background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,.05);
-      font-weight:600;cursor:grab; position:relative;
-    }
-    .card:active{cursor:grabbing}
-    .card.small{font-weight:500}
-    .floating{position:fixed;z-index:1000;pointer-events:none;transform:rotate(0.0001deg)}
-    .slot-highlight{outline:3px solid rgba(37,99,235,.35);outline-offset:2px}
-    .result{margin-top:10px;font-weight:700}
-    .result.ok{color:var(--good)} .result.bad{color:var(--bad)}
-    .badge{
-      display:inline-block;font-size:12px;color:#fff;background:var(--accent);
-      padding:2px 8px;border-radius:999px;margin-left:8px
-    }
-    .muted{color:var(--muted)}
-    .kiosk{display:flex;gap:8px;align-items:center}
-    .kiosk input{width:18px;height:18px}
-    @media (max-width:900px){
-      .board{grid-template-columns:1fr;gap:12px}
-    }
-  </style>
+  /* Arbeitsfläche: links CV (wie echtes Dokument), rechts Karten */
+  .board{display:grid;grid-template-columns: 2fr 1fr; gap:16px}
+  @media (max-width:1000px){ .board{grid-template-columns:1fr} }
+
+  /* CV Papier */
+  .cv-sheet{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px;
+    padding:28px; box-shadow:0 10px 30px rgba(0,0,0,.06);
+  }
+  /* Kopf mit großem Namen */
+  .cv-head{
+    display:grid; grid-template-columns: 96px 1fr; gap:20px; align-items:center; margin-bottom:18px;
+  }
+  .avatar{
+    width:96px;height:96px;border-radius:12px;border:1px solid var(--line);
+    background:linear-gradient(180deg,#e5e7eb,#f8fafc);
+    display:grid;place-items:center;color:var(--muted);font-size:12px
+  }
+  .name-block{display:flex;flex-direction:column;gap:2px}
+  .cv-name{font-size:28px; font-weight:800; letter-spacing:.2px}
+  .cv-sub{color:var(--muted);font-size:14px}
+
+  /* Layout 2 Spalten wie bei echten Vorlagen */
+  .cv-grid{
+    display:grid; grid-template-columns: 260px 1fr; gap:28px;
+  }
+  @media (max-width:800px){ .cv-grid{grid-template-columns:1fr} }
+
+  .col-left{padding-right:8px;border-right:1px solid var(--line)}
+  @media (max-width:800px){ .col-left{border-right:none;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:12px} }
+
+  .cv-sec{margin-bottom:18px}
+  .cv-title{
+    font-size:13px; letter-spacing:.14em; text-transform:uppercase;
+    color:#111827; font-weight:800; margin-bottom:10px;
+  }
+  .cv-line{height:1px;background:var(--line);margin:8px 0 10px}
+
+  /* Drop-Zonen stilecht in den jeweiligen Bereichen */
+  .drop-zone{
+    min-height:48px; border:2px dashed #dfe3ea; border-radius:12px;
+    padding:10px; background:#fafafa;
+    display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start;
+  }
+  .drop-zone.tight{min-height:38px;padding:8px;border-radius:10px}
+  .slot-highlight{outline:3px solid rgba(37,99,235,.35);outline-offset:2px}
+
+  /* Kartenbereich rechts */
+  .tray{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.05); display:flex;flex-direction:column;gap:10px
+  }
+  .hint{font-size:14px;color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  .card{
+    user-select:none;touch-action:none;cursor:grab;
+    background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:10px;font-weight:600;
+    box-shadow:0 2px 8px rgba(0,0,0,.05)
+  }
+  .card.small{font-weight:500}
+  .card:active{cursor:grabbing}
+  .floating{position:fixed;z-index:1000;pointer-events:none;transform:rotate(0.0001deg)}
+
+  .result{font-weight:800;margin-top:4px}
+  .ok{color:var(--good)} .bad{color:var(--bad)}
+</style>
 </head>
 <body>
-  <div class="app" id="app">
-    <header>
+  <div class="wrap">
+    <header class="top">
       <div>
-        <h1>Lebenslauf – Drag & Drop <span class="badge">A1</span></h1>
-        <div class="subtitle">Ziehe die Karten an die richtige Stelle im Lebenslauf. (Tippe & ziehe auf Handy/Tablet.)</div>
+        <h1>Lebenslauf – realistische Drag-&-Drop-Übung <span style="font-size:12px;color:#64748b">A1</span></h1>
+        <div style="color:#64748b;font-size:14px">Ziehe die Karten an die richtigen Stellen im Lebenslauf.</div>
       </div>
       <div class="controls">
+        <label class="kiosk"><input type="checkbox" id="simpleText"> Einfache Karten</label>
         <button id="mix">Mischen</button>
         <button id="reset">Zurücksetzen</button>
-        <button id="show">Lösung anzeigen</button>
+        <button id="show">Lösung</button>
         <button class="primary" id="check">Prüfen</button>
       </div>
     </header>
 
-    <div class="board">
-      <!-- Lebenslauf -->
-      <section class="cv" aria-label="Lebenslauf">
-        <div class="title">Lebenslauf</div>
-
-        <div class="section">
-          <div class="label">Persönliche Daten</div>
-          <div class="drop-zone" data-accept="name,adresse,geburtsdatum,geburtsort,telefon,email"></div>
+    <section class="board">
+      <!-- Linke Seite: ECHTER CV-Aufbau -->
+      <article class="cv-sheet" aria-label="Lebenslauf-Dokument">
+        <!-- Kopf -->
+        <div class="cv-head">
+          <div class="avatar">Foto</div>
+          <div class="name-block">
+            <div class="cv-name">Vorname Nachname</div>
+            <div class="cv-sub">Lebenslauf</div>
+            <!-- Optional: kleine Drop-Zone für Kurzprofil -->
+            <!-- <div class="drop-zone tight" data-accept="profil"></div> -->
+          </div>
         </div>
 
-        <div class="section">
-          <div class="label">Ausbildung</div>
-          <div class="drop-zone" data-accept="schule,abschluss,ausbildung,bildung"></div>
-        </div>
+        <!-- Zwei-Spalten-Layout -->
+        <div class="cv-grid">
+          <!-- Linke Spalte: Persönliche Daten / Kontakt -->
+          <div class="col-left">
+            <div class="cv-sec">
+              <div class="cv-title">Persönliche Daten</div>
+              <div class="cv-line"></div>
+              <div class="drop-zone tight" data-accept="name"></div>
+              <div class="drop-zone tight" data-accept="adresse"></div>
+              <div class="drop-zone tight" data-accept="geburtsdatum"></div>
+              <div class="drop-zone tight" data-accept="geburtsort"></div>
+            </div>
+            <div class="cv-sec">
+              <div class="cv-title">Kontakt</div>
+              <div class="cv-line"></div>
+              <div class="drop-zone tight" data-accept="telefon"></div>
+              <div class="drop-zone tight" data-accept="email"></div>
+            </div>
+            <div class="cv-sec">
+              <div class="cv-title">Sprachen</div>
+              <div class="cv-line"></div>
+              <div class="drop-zone" data-accept="sprache"></div>
+            </div>
+          </div>
 
-        <div class="section">
-          <div class="label">Berufserfahrung / Praktika</div>
-          <div class="drop-zone" data-accept="job,praktikum,erfahrung,taetigkeit"></div>
+          <!-- Rechte Spalte: Erfahrung / Ausbildung / Skills -->
+          <div class="col-right">
+            <div class="cv-sec">
+              <div class="cv-title">Berufserfahrung / Praktika</div>
+              <div class="cv-line"></div>
+              <div class="drop-zone" data-accept="job,praktikum,erfahrung,taetigkeit"></div>
+            </div>
+            <div class="cv-sec">
+              <div class="cv-title">Ausbildung</div>
+              <div class="cv-line"></div>
+              <div class="drop-zone" data-accept="schule,abschluss,ausbildung,bildung"></div>
+            </div>
+            <div class="cv-sec">
+              <div class="cv-title">Kenntnisse & Interessen</div>
+              <div class="cv-line"></div>
+              <div class="drop-zone" data-accept="edv,kenntnisse,hobbys,interessen"></div>
+            </div>
+          </div>
         </div>
+      </article>
 
-        <div class="section">
-          <div class="label">Kenntnisse & Interessen</div>
-          <div class="drop-zone" data-accept="sprache,edv,kenntnisse,hobbys,interessen"></div>
-        </div>
-      </section>
-
-      <!-- Karten-Ablage -->
-      <aside class="tray" aria-label="Karten">
-        <div class="kiosk">
-          <label class="muted"><input type="checkbox" id="simpleText" /> Einfache Karten (kürzere Texte)</label>
-        </div>
+      <!-- Rechte Seite: Karten -->
+      <aside class="tray" aria-label="Karten-Ablage">
         <div class="hint">Karten:</div>
-        <div class="cards" id="cards"></div>
-        <div class="result" id="result" aria-live="polite"></div>
+        <div id="cards" class="cards"></div>
+        <div id="result" class="result" aria-live="polite"></div>
       </aside>
-    </div>
+    </section>
   </div>
 
-  <script>
-    /***********************
-     *  CONFIG (anpassen)
-     ***********************/
-    const CONFIG = {
-      // Zwei Varianten: "voll" (längere Sätze) und "kurz" (A1-kurz)
-      items_full: [
-        { key:"name",       text:"Name: (Vor- und Nachname)" },
-        { key:"adresse",    text:"Adresse: Straße, Hausnummer, PLZ, Ort" },
-        { key:"geburtsdatum",text:"Geburtsdatum: TT.MM.JJJJ" },
-        { key:"geburtsort", text:"Geburtsort: Stadt, Land" },
-        { key:"telefon",    text:"Telefon: 0176 / 123456789" },
-        { key:"email",      text:"E-Mail: name@mail.de" },
+<script>
+  /***************
+   * Inhalt
+   ***************/
+  const CONFIG = {
+    items_full: [
+      { key:"name",       text:"Name: (Vor- und Nachname)" },
+      { key:"adresse",    text:"Adresse: Straße, Nr., PLZ Ort" },
+      { key:"geburtsdatum",text:"Geburtsdatum: TT.MM.JJJJ" },
+      { key:"geburtsort", text:"Geburtsort: Stadt, Land" },
+      { key:"telefon",    text:"Telefon: 0176 123456789" },
+      { key:"email",      text:"E-Mail: name@mail.de" },
 
-        { key:"schule",     text:"Schule: z. B. Gesamtschule Musterstadt" },
-        { key:"abschluss",  text:"Abschluss: vorauss. 2026" },
-        { key:"ausbildung", text:"Schulische Ausbildung / Berufsschule" },
-        { key:"bildung",    text:"Kurse / Zertifikate (z. B. Erste Hilfe)" },
+      { key:"sprache",    text:"Sprachen: Deutsch A1, Englisch A2, Muttersprache" },
 
-        { key:"job",        text:"Berufserfahrung: Minijob im Supermarkt (Kasse)" },
-        { key:"praktikum",  text:"Praktikum: 06/2024 – 07/2024 Kindergarten" },
-        { key:"erfahrung",  text:"Tätigkeiten: Kunden helfen, Regale einräumen" },
-        { key:"taetigkeit", text:"Aufgaben: Kinder betreuen, Basteln" },
+      { key:"job",        text:"Berufserfahrung: Minijob im Supermarkt (Kasse)" },
+      { key:"praktikum",  text:"Praktikum: 06/2024–07/2024 Kindergarten" },
+      { key:"erfahrung",  text:"Tätigkeiten: Kunden helfen, Regale einräumen" },
+      { key:"taetigkeit", text:"Aufgaben: Kinder betreuen, Basteln" },
 
-        { key:"sprache",    text:"Sprachen: Deutsch A1, Englisch A2, Muttersprache" },
-        { key:"edv",        text:"EDV: Word, PowerPoint, Smartphone" },
-        { key:"kenntnisse", text:"Fähigkeiten: pünktlich, teamfähig" },
-        { key:"hobbys",     text:"Hobbys: Fußball, Zeichnen, Musik" },
-        { key:"interessen", text:"Interessen: Technik, Soziales" },
-      ],
-      items_short: [
-        { key:"name",       text:"Name" },
-        { key:"adresse",    text:"Adresse" },
-        { key:"geburtsdatum",text:"Geburtsdatum" },
-        { key:"geburtsort", text:"Geburtsort" },
-        { key:"telefon",    text:"Telefon" },
-        { key:"email",      text:"E-Mail" },
+      { key:"schule",     text:"Schule: Gesamtschule Musterstadt" },
+      { key:"abschluss",  text:"Schulabschluss: vorauss. 2026" },
+      { key:"ausbildung", text:"Berufsschule / schulische Ausbildung" },
+      { key:"bildung",    text:"Kurse / Zertifikate (Erste Hilfe, PC)" },
 
-        { key:"schule",     text:"Schule" },
-        { key:"abschluss",  text:"Abschluss" },
-        { key:"ausbildung", text:"Ausbildung" },
-        { key:"bildung",    text:"Kurse" },
+      { key:"edv",        text:"EDV: Word, PowerPoint, Smartphone" },
+      { key:"kenntnisse", text:"Fähigkeiten: pünktlich, teamfähig" },
+      { key:"hobbys",     text:"Hobbys: Fußball, Zeichnen, Musik" },
+      { key:"interessen", text:"Interessen: Technik, Soziales" },
+    ],
+    items_short: [
+      { key:"name",       text:"Name" },
+      { key:"adresse",    text:"Adresse" },
+      { key:"geburtsdatum",text:"Geburtsdatum" },
+      { key:"geburtsort", text:"Geburtsort" },
+      { key:"telefon",    text:"Telefon" },
+      { key:"email",      text:"E-Mail" },
 
-        { key:"job",        text:"Berufserfahrung" },
-        { key:"praktikum",  text:"Praktikum" },
-        { key:"erfahrung",  text:"Erfahrung" },
-        { key:"taetigkeit", text:"Tätigkeiten" },
+      { key:"sprache",    text:"Sprachen" },
 
-        { key:"sprache",    text:"Sprachen" },
-        { key:"edv",        text:"Computer" },
-        { key:"kenntnisse", text:"Fähigkeiten" },
-        { key:"hobbys",     text:"Hobbys" },
-        { key:"interessen", text:"Interessen" },
-      ],
-      // Jede Drop-Zone akzeptiert mehrere Schlüssel (siehe data-accept im HTML)
-    };
+      { key:"job",        text:"Berufserfahrung" },
+      { key:"praktikum",  text:"Praktikum" },
+      { key:"erfahrung",  text:"Erfahrung" },
+      { key:"taetigkeit", text:"Tätigkeiten" },
 
-    /***********************
-     *  Hilfsfunktionen
-     ***********************/
-    const $ = sel => document.querySelector(sel);
-    const $$ = sel => Array.from(document.querySelectorAll(sel));
-    function shuffle(arr){
-      const a=[...arr];
-      for(let i=a.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [a[i],a[j]]=[a[j],a[i]];
-      }
-      return a;
+      { key:"schule",     text:"Schule" },
+      { key:"abschluss",  text:"Abschluss" },
+      { key:"ausbildung", text:"Ausbildung" },
+      { key:"bildung",    text:"Kurse" },
+
+      { key:"edv",        text:"Computer" },
+      { key:"kenntnisse", text:"Fähigkeiten" },
+      { key:"hobbys",     text:"Hobbys" },
+      { key:"interessen", text:"Interessen" },
+    ],
+  };
+
+  const $ = s=>document.querySelector(s);
+  const $$ = s=>Array.from(document.querySelectorAll(s));
+  function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+  const cardsEl   = $("#cards");
+  const resultEl  = $("#result");
+  const simpleCb  = $("#simpleText");
+
+  function zoneAccepts(zone, key){
+    return (zone.dataset.accept||"").split(",").map(s=>s.trim()).includes(key);
+  }
+
+  function buildCards(){
+    cardsEl.innerHTML = "";
+    const items = simpleCb.checked ? CONFIG.items_short : CONFIG.items_full;
+    for(const item of shuffle(items)){
+      const card = document.createElement("div");
+      card.className = "card";
+      if(simpleCb.checked) card.classList.add("small");
+      card.textContent = item.text;
+      card.setAttribute("data-key", item.key);
+      card.setAttribute("role","button");
+      card.setAttribute("tabindex","0");
+      cardsEl.appendChild(card);
     }
-    function zoneAccepts(zone, key){
-      const accept = (zone.dataset.accept||"").split(",").map(s=>s.trim());
-      return accept.includes(key);
-    }
+    attachDnd();
+    resultEl.textContent = "";
+    resultEl.className = "result";
+  }
+  simpleCb.addEventListener("change", buildCards);
 
-    /***********************
-     *  Render Karten
-     ***********************/
-    const cardsEl = $("#cards");
-    const resultEl = $("#result");
-    const simpleToggle = $("#simpleText");
+  /* Drag & Drop via Pointer Events (touch+mouse) */
+  let drag = null;
 
-    function buildCards(){
-      cardsEl.innerHTML = "";
-      const items = simpleToggle.checked ? CONFIG.items_short : CONFIG.items_full;
-      for(const item of shuffle(items)){
-        const card = document.createElement("div");
-        card.className = "card";
-        if(simpleToggle.checked) card.classList.add("small");
-        card.textContent = item.text;
-        card.setAttribute("data-key", item.key);
-        card.setAttribute("role", "button");
-        card.setAttribute("tabindex", "0");
-        cardsEl.appendChild(card);
-      }
-      attachDragHandlers();
-      resultEl.textContent = "";
-    }
-
-    simpleToggle.addEventListener("change", buildCards);
-
-    /***********************
-     *  Drag & Drop (Pointer)
-     ***********************/
-    let dragState = null;
-
-    function attachDragHandlers(){
-      $$(".card").forEach(card=>{
-        card.addEventListener("pointerdown", onPointerDown);
-        // Keyboard support: Enter/Space to pick up & drop to focused zone
-        card.addEventListener("keydown", e=>{
-          if(e.key==="Enter"||e.key===" "){
-            e.preventDefault();
-            // attempt to snap to first valid zone (cycles)
-            const key = card.dataset.key;
-            const zones = $$(".drop-zone");
-            const target = zones.find(z=>zoneAccepts(z,key));
-            if(target){ target.appendChild(card); flash(target); }
-          }
-        });
+  function attachDnd(){
+    $$(".card").forEach(card=>{
+      card.addEventListener("pointerdown", onDown);
+      card.addEventListener("keydown", e=>{
+        if(e.key==="Enter"||e.key===" "){
+          e.preventDefault();
+          const key = card.dataset.key;
+          const target = $$(".drop-zone").find(z=>zoneAccepts(z,key));
+          if(target){ target.appendChild(card); flash(target); }
+        }
       });
+    });
+  }
+
+  function onDown(e){
+    const card = e.currentTarget;
+    e.preventDefault();
+    card.setPointerCapture(e.pointerId);
+
+    const r = card.getBoundingClientRect();
+    const ghost = card.cloneNode(true);
+    ghost.classList.add("floating");
+    ghost.style.width = r.width+"px";
+    document.body.appendChild(ghost);
+
+    drag = {card, ghost, dx:e.clientX-r.left, dy:e.clientY-r.top};
+    card.style.opacity = ".35";
+    highlight(card.dataset.key,true);
+
+    card.addEventListener("pointermove", onMove);
+    card.addEventListener("pointerup", onUp);
+    card.addEventListener("pointercancel", onUp);
+
+    moveGhost(e);
+  }
+  function onMove(e){ if(!drag) return; moveGhost(e); }
+  function moveGhost(e){
+    const {ghost,dx,dy,card} = drag;
+    const x = e.clientX - dx, y = e.clientY - dy;
+    ghost.style.transform = `translate(${x}px,${y}px)`;
+    const target = bestZone(e.clientX, e.clientY, card.dataset.key);
+    $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
+    if(target) target.classList.add("slot-highlight");
+  }
+  function onUp(e){
+    const {card, ghost} = drag || {};
+    if(!card) return;
+    const key = card.dataset.key;
+    const target = bestZone(e.clientX, e.clientY, key);
+    $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
+    highlight(key,false);
+
+    if(target){ target.appendChild(card); flash(target); }
+    else { cardsEl.appendChild(card); }
+
+    card.style.opacity="1";
+    ghost.remove();
+    drag=null;
+
+    card.removeEventListener("pointermove", onMove);
+    card.removeEventListener("pointerup", onUp);
+    card.removeEventListener("pointercancel", onUp);
+    resultEl.textContent="";
+    resultEl.className="result";
+  }
+  function bestZone(x,y,key){
+    const zones = $$(".drop-zone").filter(z=>zoneAccepts(z,key));
+    let best=null,bestD=Infinity;
+    for(const z of zones){
+      const r = z.getBoundingClientRect();
+      const cx = Math.max(r.left, Math.min(x, r.right));
+      const cy = Math.max(r.top,  Math.min(y, r.bottom));
+      const d = (x-cx)**2 + (y-cy)**2;
+      if(d<bestD){ bestD=d; best=z; }
     }
+    if(!best) return null;
+    const R = best.getBoundingClientRect();
+    const inside = x>=R.left && x<=R.right && y>=R.top && y<=R.bottom;
+    const near = bestD < 2600;
+    return (inside||near) ? best : null;
+  }
+  function highlight(key,on){
+    $$(".drop-zone").forEach(z=>{
+      z.style.outline = (on && zoneAccepts(z,key)) ? "2px solid rgba(37,99,235,.35)" : "none";
+    });
+  }
+  function flash(el){
+    el.animate([{background:"#e7f0ff"},{background:"#fafafa"}],{duration:450});
+  }
 
-    function onPointerDown(e){
-      const card = e.currentTarget;
-      e.preventDefault();
-      card.setPointerCapture(e.pointerId);
+  /* Prüfen, Lösung, Reset, Mischen */
+  $("#check").addEventListener("click", ()=>{
+    let total=0, ok=0, wrong=0;
+    $$(".drop-zone").forEach(z=>{
+      const accepts = (z.dataset.accept||"").split(",").map(s=>s.trim());
+      z.querySelectorAll(".card").forEach(card=>{
+        total++;
+        const good = accepts.includes(card.dataset.key);
+        card.style.borderColor = good ? "#86efac" : "#fca5a5";
+        if(good) ok++; else wrong++;
+      });
+    });
+    resultEl.className = "result " + (wrong===0?"ok":"bad");
+    resultEl.textContent = wrong===0
+      ? `Super! Alle ${ok}/${total} Karten liegen richtig.`
+      : `Richtig: ${ok}/${total}. Prüfe die rot markierten Karten.`;
+  });
 
-      const rect = card.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
-
-      const ghost = card.cloneNode(true);
-      ghost.classList.add("floating");
-      ghost.style.width = rect.width + "px";
-      document.body.appendChild(ghost);
-
-      dragState = { card, ghost, offsetX, offsetY };
-
-      moveGhost(e);
-      highlightZones(card.dataset.key, true);
-
-      card.style.opacity = "0.35";
-
-      card.addEventListener("pointermove", onPointerMove);
-      card.addEventListener("pointerup", onPointerUp);
-      card.addEventListener("pointercancel", onPointerUp);
-    }
-
-    function onPointerMove(e){
-      if(!dragState) return;
-      moveGhost(e);
-    }
-
-    function moveGhost(e){
-      const {ghost, offsetX, offsetY} = dragState;
-      const x = e.clientX - offsetX;
-      const y = e.clientY - offsetY;
-      ghost.style.transform = `translate(${x}px, ${y}px)`;
-      // Live highlight closest valid zone
-      const target = findBestZone(e.clientX, e.clientY, dragState.card.dataset.key);
-      $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
-      if(target) target.classList.add("slot-highlight");
-    }
-
-    function onPointerUp(e){
-      const {card, ghost} = dragState || {};
-      if(!card) return;
+  $("#show").addEventListener("click", ()=>{
+    $$(".card").forEach(card=>{
       const key = card.dataset.key;
-      const target = findBestZone(e.clientX, e.clientY, key);
-      $$(".drop-zone").forEach(z=>z.classList.remove("slot-highlight"));
-      highlightZones(key, false);
+      const target = $$(".drop-zone").find(z=>zoneAccepts(z,key));
+      (target||cardsEl).appendChild(card);
+      card.style.borderColor="#86efac";
+    });
+    resultEl.className="result ok";
+    resultEl.textContent="Lösung angezeigt.";
+  });
 
-      if(target){
-        target.appendChild(card);
-        flash(target);
-      }else{
-        // zurück zur Ablage
-        cardsEl.appendChild(card);
-      }
-      card.style.opacity = "1";
-      ghost.remove();
-      dragState = null;
+  $("#reset").addEventListener("click", ()=>{
+    $$(".card").forEach(c=>{ c.style.borderColor="#e5e7eb"; cardsEl.appendChild(c); });
+    resultEl.textContent=""; resultEl.className="result";
+  });
 
-      card.removeEventListener("pointermove", onPointerMove);
-      card.removeEventListener("pointerup", onPointerUp);
-      card.removeEventListener("pointercancel", onPointerUp);
-      resultEl.textContent = "";
-    }
+  $("#mix").addEventListener("click", ()=>{
+    const arr=[...$$(".card")];
+    for(const c of shuffle(arr)) cardsEl.appendChild(c);
+    resultEl.textContent=""; resultEl.className="result";
+  });
 
-    function findBestZone(clientX, clientY, key){
-      const zones = $$(".drop-zone").filter(z=>zoneAccepts(z,key));
-      let best=null, bestDist=Infinity;
-      for(const z of zones){
-        const r = z.getBoundingClientRect();
-        const cx = Math.max(r.left, Math.min(clientX, r.right));
-        const cy = Math.max(r.top,  Math.min(clientY,  r.bottom));
-        const dx = clientX - cx, dy = clientY - cy;
-        const d = dx*dx + dy*dy;
-        if(d < bestDist){ bestDist=d; best=z; }
-      }
-      // Nur wenn Cursor über Zone oder nahe dran (Schwellwert)
-      if(best){
-        const r = best.getBoundingClientRect();
-        const inside = clientX>=r.left && clientX<=r.right && clientY>=r.top && clientY<=r.bottom;
-        const near = bestDist < 2600; // ~51px Radius
-        return (inside || near) ? best : null;
-      }
-      return null;
-    }
-
-    function highlightZones(key, on){
-      $$(".drop-zone").forEach(z=>{
-        if(on && zoneAccepts(z,key)) z.style.outline = "2px solid rgba(37,99,235,.35)";
-        else z.style.outline = "none";
-      });
-    }
-    function flash(el){
-      el.animate([{background:"#e0ecff"},{background:"#fafafa"}],{duration:400});
-    }
-
-    /***********************
-     *  Prüfen / Lösung / Reset
-     ***********************/
-    function check(){
-      let total=0, ok=0, wrong=0;
-      const zones = $$(".drop-zone");
-      zones.forEach(z=>{
-        const accepts = (z.dataset.accept||"").split(",").map(s=>s.trim());
-        z.querySelectorAll(".card").forEach(card=>{
-          total++;
-          const good = accepts.includes(card.dataset.key);
-          card.style.borderColor = good ? "#86efac" : "#fca5a5";
-          if(good) ok++; else wrong++;
-        });
-      });
-      resultEl.className = "result " + (wrong===0 ? "ok":"bad");
-      resultEl.textContent = wrong===0
-        ? `Super! Alle ${ok}/${total} Karten liegen richtig.`
-        : `Richtig: ${ok}/${total} – Bitte überprüfe die rot markierten Karten.`;
-    }
-
-    function showSolution(){
-      // Alle Karten in korrekte Zonen sortieren (nach erster passenden Zone)
-      $$(".card").forEach(card=>{
-        const key = card.dataset.key;
-        const target = $$(".drop-zone").find(z=>zoneAccepts(z,key));
-        (target || cardsEl).appendChild(card);
-      });
-      // Nach Lösung grün umranden
-      $$(".card").forEach(c=>c.style.borderColor="#86efac");
-      resultEl.className = "result ok";
-      resultEl.textContent = "Lösung angezeigt. Du kannst jetzt die Bereiche benennen.";
-    }
-
-    function resetAll(){
-      // Karten zurück, Farben weg
-      $$(".card").forEach(c=>{
-        c.style.borderColor="#e5e7eb";
-        cardsEl.appendChild(c);
-      });
-      resultEl.className="result";
-      resultEl.textContent="";
-    }
-
-    function mixAll(){
-      const cards=[...$$(".card")];
-      for(const c of shuffle(cards)) cardsEl.appendChild(c);
-      resultEl.textContent="";
-    }
-
-    // Buttons
-    $("#check").addEventListener("click", check);
-    $("#show").addEventListener("click", showSolution);
-    $("#reset").addEventListener("click", resetAll);
-    $("#mix").addEventListener("click", mixAll);
-
-    // Start
-    buildCards();
-  </script>
+  // Start
+  buildCards();
+</script>
 </body>
 </html>
