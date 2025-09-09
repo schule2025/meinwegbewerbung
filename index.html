@@ -39,30 +39,28 @@
   }
   .cv-head{
     display:grid;
-    grid-template-columns: 140px 1fr; /* gleiche Breite wie dein größeres Bild */
-    gap:24px; /* optional etwas mehr Abstand */
+    grid-template-columns: 140px 1fr; /* Spalte für das größere Bild */
+    gap:32px; /* mehr Abstand */
     align-items:center;
     margin-bottom:18px;
-}
-
- .avatar{
+  }
+  .avatar{
     width:140px;   /* Breiter */
-    height:260px;  /* Höher */
+    height:250px;  /* Höher */
     border-radius:12px;
     border:1px solid var(--line);
     background:#fff;
     overflow:hidden;
     display:grid;
     place-items:center;
-}
-.avatar img{
+  }
+  .avatar img{
     width:100%;
     height:100%;
-    object-fit:contain; /* sorgt dafür, dass das Bild vollständig sichtbar bleibt */
+    object-fit:contain; /* Bild vollständig sichtbar */
     border-radius:12px;
-}
-
-  .name-block{display:flex;flex-direction:column;gap:2px}
+  }
+  .name-block{display:flex;flex-direction:column;gap:4px}
   .cv-name{font-size:28px; font-weight:800; letter-spacing:.2px}
   .cv-sub{color:var(--muted);font-size:14px}
 
@@ -190,6 +188,7 @@
   </div>
 
 <script>
+  /* ---- Drag&Drop-Logik und Karten wie vorher ---- */
   const CONFIG = {
     items_full: [
       { key:"name",       text:"Name: (Vor- und Nachname)" },
@@ -383,10 +382,3 @@
   function highlight(key,on){
     $$(".drop-zone").forEach(z=>{
       z.style.outline = (on && zoneAccepts(z,key)) ? "2px solid rgba(37,99,235,.35)" : "none";
-    });
-  }
-  function flash(el){ el.animate([{background:"#e7f0ff"},{background:"#fafafa"}],{duration:450}); }
-
-  document.getElementById("check").addEventListener("click", ()=>{
-    let total=0, ok=0, wrong=0;
-    $$(".drop-zone").forEach
